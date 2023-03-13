@@ -1,21 +1,24 @@
 %%%Initialize
-clear
-clc
-close all
+close all, clear all, clc
 
 tic
 
 %%%Globals
 global BB m I Is invI lastMagUpdate nextMagUpdate lastSensorUpdate 
-global nextSensorUpdate BfieldMeasured pqrMeasured ptpMeasured BfieldNav pqrNav ptpNav
+global nextSensorUpdate BfieldMeasured pqrMeasured ptpMeasured BfieldNav pqrNav ptpNav 
 global BfieldNavPrev pqrNavPrev ptpNavPrev current Ir1Bcg Ir2Bcg Ir3Bcg n1 n2 n3
 global maxSpeed maxAlpha Ir1B Ir2B Ir3B rwalphas
+global kalmanNavPrev kalmanNav P Uhat K Rk Q
  
 %%%%Initialize Nav Filter
 BfieldNavPrev = [0;0;0];
 pqrNavPrev = [0;0;0];
 ptpNavPrev = [0;0;0];
-
+kalmanNavPrev = [0;0;0];
+kalmanNav = [0;0;0];
+P = 0;
+Uhat = 0;
+K = 0;
 %%%%Simulation of a Low Earth Satellite
 disp('Simulation Started')
 
@@ -65,7 +68,7 @@ state = [x0;y0;z0;xdot0;ydot0;zdot0;q0123_0;p0;q0;r0;w10;w20;w30];
 period = 2*pi/sqrt(mu)*semi_major^(3/2);
 number_of_orbits = 1;
 tfinal = period*number_of_orbits;
-%tfinal = 200;
+%tfinal = 100;
 timestep = 1.0;
 tout = 0:timestep:tfinal;
 stateout = zeros(length(tout),length(state));
@@ -82,6 +85,7 @@ pqrm = zeros(length(tout),3);
 
 ptpm = zeros(length(tout),3);
 ptpN = 0*ptpm;
+kalmanN = 0*ptpm;
 
 BxBN = 0*stateout(:,1);
 ByBN = BxBout;
@@ -137,6 +141,7 @@ for idx = 1:length(tout)
     %%%Save ptp
     ptpm(idx,:) = ptpMeasured';
     ptpN(idx,:) = ptpNav';
+    kalmanN(idx,:) = kalmanNav';
     
     if tout(idx) > lastPrint
         disp(['Time = ',num2str(tout(idx)),' out of ',num2str(tfinal)])
@@ -153,8 +158,11 @@ for idx = 1:length(tout)
     
     
 end
+
+
 %%%Save original State
 stateout_original = stateout;
+
 
 %%
 disp('Simulation Complete')
@@ -177,6 +185,9 @@ w123 = stateout(:,14:16);
 X = X*R/1000;
 Y = Y*R/1000;
 Z = Z*R/1000;
+
+errorN = ptpout-kalmanN;
+max_error = sum(max(abs(errorN)*pi/180))
 
 %%%Plot X,Y,Z as a function of time
 %fig0 = figure();
@@ -291,6 +302,22 @@ grid on
 xlabel('Time (sec)')
 ylabel('Angular Velocity of RWs (rad/s)')
 legend('X','Y','Z')
+
+
+
+%%%plot Kalman Estimate
+fig42 = figure();
+set(fig42,'color','white')
+p1 = plot(tout,ptpout*180/pi,'-','LineWidth',2);
+hold on
+%p2 = plot(tout,ptpm*180/pi,'-s','LineWidth',2);
+p2 = plot(tout,errorN*180/pi,'-s','LineWidth',2);
+p3 = plot(tout,kalmanN*180/pi,'--','LineWidth',2);
+grid on
+xlabel('Time (sec)')
+ylabel('Euler Angles (deg)')
+%legend([p1(1),p2(1),p3(1)],'Actual','Measured','Kalman')
+legend([p1(1),p2(1),p3(1)],'Actual','Error','Kalman')
 toc
 
 

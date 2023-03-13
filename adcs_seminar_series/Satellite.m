@@ -1,8 +1,8 @@
 function dstatedt = Satellite(t,state)
 %%%stateinitial = [x0;y0;z0;xdot0;ydot0;zdot0];
 global BB invI I m nextMagUpdate lastMagUpdate lastSensorUpdate maxSpeed
-global nextSensorUpdate BfieldMeasured pqrMeasured BfieldNav pqrNav
-global BfieldNavPrev pqrNavPrev current Is Ir1Bcg Ir2Bcg Ir3Bcg n1 n2 n3
+global nextSensorUpdate BfieldMeasured pqrMeasured BfieldNav pqrNav kalmanNav
+global BfieldNavPrev pqrNavPrev current Is Ir1Bcg Ir2Bcg Ir3Bcg n1 n2 n3 kalmanNavPrev
 global maxAlpha Ir1B Ir2B Ir3B ptpMeasured ptpNavPrev ptpNav rwalphas
 x = state(1);
 y = state(2);
@@ -17,6 +17,7 @@ q = state(12);
 r = state(13);
 pqr = state(11:13);
 w123 = state(14:16);
+
 
 %%%Translational Kinematics
 vel = state(4:6);
@@ -61,7 +62,7 @@ if t >= lastSensorUpdate
     [BfieldMeasured,pqrMeasured,ptpMeasured] = Sensor(BB,pqr,ptp); 
     
     %%%NAVIGATION BLOCK
-    [BfieldNav,pqrNav,ptpNav] = Navigation(BfieldMeasured,pqrMeasured,ptpMeasured);   
+    [BfieldNav,pqrNav,ptpNav,kalmanNav] = Navigation(BfieldMeasured,pqrMeasured,ptpMeasured);   
 end
 
 
