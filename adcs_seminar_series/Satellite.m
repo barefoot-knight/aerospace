@@ -19,7 +19,7 @@ pqr = state(11:13);
 w123 = state(14:16);
 
 %%%Translational Kinematics
-vel = state(4:6);
+vel = state(4:6)
 %%%Rotational Kinematics
 
 PQRMAT = [0 -p -q -r;p 0 r -q;q -r 0 p;r q -p 0];
@@ -97,6 +97,9 @@ LMN = LMN_magtorquers - LMN_RWs;
 %%%Translational Dynamics
 F = Fgrav;
 accel = F/m;
+
+%%% Compute the disturbance torques
+Mtotal = Disturbance(rho,vel,BI,BNED);
 
 %%%Compute the total angular momentum
 w1 = w123(1);
